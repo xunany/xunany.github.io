@@ -55,7 +55,7 @@
     .vignette { position:absolute; inset:0; pointer-events:none; background: radial-gradient(900px 400px at 50% 30%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 35%, rgba(0,0,0,0.5) 100%); }
 
     /* make active slide visually on top and slightly larger */
-    .splide__slide.is-active { z-index:30; transform: scale(1.02); box-shadow:0 30px 90px rgba(0,0,0,0.75); }
+    .splide__slide.is-active { z-index:30; transform: none; box-shadow:0 30px 90px rgba(0,0,0,0.75); }
     .splide__slide:not(.is-active) { z-index:10; }
     .splide__slide:not(.is-active) .slide-inner img { transform: scale(var(--neighbor-scale)); filter:brightness(.9) saturate(.96); }
 
@@ -94,7 +94,7 @@
       <div id="splide" class="splide" aria-label="Fancy peek carousel">
         <div class="splide__track">
           <ul class="splide__list">
-            
+
             <li class="splide__slide">
               <div class="slide-inner"><img data-splide-lazy="photos/XPX03427.jpg" alt="XPX03427"></div>
               <div class="overlay"></div><div class="vignette"></div>
