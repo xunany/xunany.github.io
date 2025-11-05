@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -11,4 +11,323 @@
     <img src="XPX03427.jpg" alt="A cat sitting" class="main-photo">
   </div>
 </body>
+</html> -->
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Peek Carousel — One at a time with neighbors</title>
+
+  <style>
+    :root{
+      --bg: #071226;
+      --muted: rgba(255,255,255,0.12);
+      --accent: #7ad7ff;
+      --gap: 20px;
+      --slide-scale: 1.02;
+      --slide-width: 70%; /* percent of carousel width each main slide takes */
+      --control-size: 52px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:#f4fbff;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+    a{color:inherit;text-decoration:none}
+    .page{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:36px;
+    }
+
+    .container{width:clamp(360px, 90vw, 1120px); margin:auto}
+    h1{font-weight:600;margin:0 0 10px;font-size:clamp(18px,2.4vw,26px);text-align:center;color:#e8fbff}
+    .sub{text-align:center;color:var(--muted);font-size:13px;margin:0 0 22px}
+
+    /* ---------- Carousel ---------- */
+    .carousel {
+      position:relative;
+      width:100%;
+      height:clamp(320px, 52vh, 620px);
+      margin: 0 auto;
+      overflow:visible; /* allow peek */
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* track contains slides side-by-side */
+    .track {
+      display:flex;
+      gap:var(--gap);
+      align-items:center;
+      transition: transform .45s cubic-bezier(.2,.9,.25,1);
+      will-change: transform;
+      padding: 0;
+      user-select:none;
+      touch-action: pan-y;
+    }
+
+    /* each slide is a card */
+    .slide {
+      flex: 0 0 var(--slide-width); /* 70% of carousel width by default */
+      height:100%;
+      border-radius:16px;
+      overflow:hidden;
+      position:relative;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: 0 18px 60px rgba(2,6,23,0.6);
+      transform-origin:center center;
+      transition: transform .35s ease, box-shadow .35s ease;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* center slide slightly larger */
+    .slide.center { transform: scale(var(--slide-scale)); box-shadow: 0 28px 80px rgba(2,6,23,0.8); }
+
+    .slide img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      -webkit-user-drag: none;
+      pointer-events:none;
+      transition: transform .6s ease;
+      filter: saturate(1.03) contrast(1.02);
+    }
+
+    /* caption area */
+    .meta {
+      position:absolute;
+      left:0; right:0;
+      bottom:0;
+      padding:12px 14px;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(7,9,18,0.62) 60%);
+      color: #eef7ff;
+      font-size:14px;
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:center;
+    }
+    .meta .title{font-weight:600; font-size:15px}
+    .meta .subt{opacity:.9; font-size:13px; color: #d8f7ffcc}
+
+    /* controls */
+    .control {
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      width:var(--control-size);
+      height:var(--control-size);
+      border-radius:12px;
+      background: rgba(255,255,255,0.06);
+      display:grid;place-items:center;
+      color:#fff; border:0; cursor:pointer;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 6px 20px rgba(2,6,23,0.6);
+      transition: transform .12s ease, background .12s ease;
+      font-size:22px;
+    }
+    .control:hover { transform: translateY(-50%) scale(1.04); background: rgba(255,255,255,0.09) }
+    .control.prev { left:14px }
+    .control.next { right:14px }
+
+    /* dots */
+    .dots {
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:12px;
+      display:flex;
+      gap:8px;
+      z-index:6;
+      align-items:center;
+    }
+    .dot {
+      width:10px; height:10px; border-radius:50%;
+      background: rgba(255,255,255,0.24);
+      cursor:pointer; border:0;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .dot.active { background:var(--accent); transform: scale(1.18) }
+
+    /* responsive tweaks */
+    @media (max-width:820px){
+      :root{ --slide-width: 78%}
+      .control { width:44px;height:44px;font-size:20px }
+    }
+    @media (max-width:520px){
+      :root{ --slide-width: 86% ; --gap:12px}
+      .meta{padding:10px;font-size:13px}
+      .control{display:none} /* rely on swipe on tiny screens */
+      .dots{bottom:8px}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="container">
+      <h1>Peek Carousel</h1>
+      <p class="sub">One image centered, previous and next peek at the sides — drag, swipe, buttons & keyboard supported.</p>
+
+      <div class="carousel" id="carousel" aria-roledescription="carousel">
+        <div class="track" id="track" role="list">
+          <!-- Slides: change filenames or captions as needed -->
+          <div class="slide" role="listitem"><img data-src="photos/XPX03427.jpg" alt="Photo 1"><div class="meta"><div class="title">Photo 1</div><div class="subt">Nice caption</div></div></div>
+          <div class="slide" role="listitem"><img data-src="photos/XPX03250.jpg" alt="Photo 2"><div class="meta"><div class="title">Photo 2</div><div class="subt">Nice caption</div></div></div>
+          <div class="slide" role="listitem"><img data-src="photos/XPX03269.jpg" alt="Photo 3"><div class="meta"><div class="title">Photo 3</div><div class="subt">Nice caption</div></div></div>
+        </div>
+
+        <button class="control prev" id="prevBtn" aria-label="Previous">‹</button>
+        <button class="control next" id="nextBtn" aria-label="Next">›</button>
+
+        <div class="dots" id="dots" aria-hidden="false"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      // elements
+      const carousel = document.getElementById('carousel');
+      const track = document.getElementById('track');
+      const slides = Array.from(track.children);
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const dotsWrap = document.getElementById('dots');
+
+      let index = 0, isDragging = false, startX = 0, currentTranslate = 0, prevTranslate = 0, animationID = 0;
+      const total = slides.length;
+      let slideWidthWithGap = 0; // recalculated
+
+      // create dots
+      slides.forEach((s,i) => {
+        const d = document.createElement('button');
+        d.className = 'dot' + (i === 0 ? ' active' : '');
+        d.setAttribute('aria-label', 'Go to slide ' + (i+1));
+        d.addEventListener('click', () => { goTo(i); });
+        dotsWrap.appendChild(d);
+      });
+      const dots = Array.from(dotsWrap.children);
+
+      // lazy load: set img.src from data-src on demand
+      function ensureLoaded(i){
+        if (i<0 || i>=slides.length) return;
+        const img = slides[i].querySelector('img');
+        if (!img) return;
+        if (!img.src) img.src = img.dataset.src;
+      }
+
+      function calcSizes(){
+        const gap = parseFloat(getComputedStyle(track).gap) || 0;
+        const slideRect = slides[0].getBoundingClientRect();
+        slideWidthWithGap = slideRect.width + gap;
+      }
+
+      function centerIndexToTranslate(i){
+        // center calculation:
+        // we want slide i to be centered in carousel viewport.
+        calcSizes();
+        const carouselRect = carousel.getBoundingClientRect();
+        const centerOffset = (carouselRect.width - (slideWidthWithGap - (parseFloat(getComputedStyle(track).gap)||0))) / 2;
+        return - (i * slideWidthWithGap) + centerOffset;
+      }
+
+      function setPosition(translate, instant){
+        if (instant) track.style.transition = 'none';
+        else track.style.transition = 'transform .45s cubic-bezier(.2,.9,.25,1)';
+        track.style.transform = `translateX(${translate}px)`;
+        if (instant) requestAnimationFrame(()=> track.style.transition = '');
+      }
+
+      function updateUI(){
+        // center classes
+        slides.forEach((s, i) => s.classList.toggle('center', i === index));
+        // dots
+        dots.forEach((d,i) => d.classList.toggle('active', i === index));
+      }
+
+      function goTo(i){
+        index = (i + total) % total;
+        const translate = centerIndexToTranslate(index);
+        setPosition(translate, false);
+        ensureLoaded(index);
+        ensureLoaded(index-1);
+        ensureLoaded(index+1);
+        updateUI();
+      }
+
+      function prev(){ goTo(index - 1); }
+      function next(){ goTo(index + 1); }
+
+      // pointer / drag support
+      function pointerStart(clientX){
+        isDragging = true;
+        startX = clientX;
+        prevTranslate = currentTranslate = parseFloat(track.style.transform.replace('translateX(','').replace('px)','')) || centerIndexToTranslate(index);
+        track.style.transition = 'none';
+        cancelAnimationFrame(animationID);
+      }
+      function pointerMove(clientX){
+        if (!isDragging) return;
+        const dx = clientX - startX;
+        currentTranslate = prevTranslate + dx;
+        setPosition(currentTranslate, true);
+      }
+      function pointerEnd(clientX){
+        if (!isDragging) return;
+        isDragging = false;
+        const dx = clientX - startX;
+        const threshold = Math.min(80, track.getBoundingClientRect().width * 0.08);
+        if (dx > threshold) prev();
+        else if (dx < -threshold) next();
+        else goTo(index); // snap back
+      }
+
+      // events
+      nextBtn.addEventListener('click', next);
+      prevBtn.addEventListener('click', prev);
+
+      // keyboard
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') next();
+        if (e.key === 'ArrowLeft') prev();
+      });
+
+      // touch
+      track.addEventListener('touchstart', e => pointerStart(e.touches[0].clientX), {passive:true});
+      track.addEventListener('touchmove', e => pointerMove(e.touches[0].clientX), {passive:true});
+      track.addEventListener('touchend', e => pointerEnd(e.changedTouches[0].clientX));
+
+      // mouse
+      track.addEventListener('mousedown', e => { e.preventDefault(); pointerStart(e.clientX); });
+      window.addEventListener('mousemove', e => pointerMove(e.clientX));
+      window.addEventListener('mouseup', e => pointerEnd(e.clientX));
+
+      // resize handling
+      window.addEventListener('resize', () => { goTo(index); });
+
+      // initialize: load current and neighbors, center
+      ensureLoaded(0); ensureLoaded(1);
+      // set initial transform instantly
+      requestAnimationFrame(() => {
+        const t = centerIndexToTranslate(0);
+        setPosition(t, true);
+        updateUI();
+      });
+
+      // accessibility: focus on carousel to capture keyboard if you like
+      carousel.setAttribute('tabindex', '0');
+      carousel.addEventListener('focus', ()=> carousel.classList.add('focused'));
+      carousel.addEventListener('blur', ()=> carousel.classList.remove('focused'));
+
+      // Expose controls to console for debugging
+      window.peekCarousel = { goTo, next, prev };
+    })();
+  </script>
+</body>
 </html>
+
+
