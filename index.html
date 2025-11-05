@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fancy Peek Carousel — Splide</title>
+  <title>Fancy Peek Carousel — Splide (Hover to see full image)</title>
 
   <!-- Splide CSS (CDN) -->
   <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" rel="stylesheet">
@@ -13,6 +13,7 @@
       --bg:#071327;
       --card-width: 80%;        /* center photo width */
       --neighbor-scale: 0.86;   /* how much smaller neighbors look */
+      --hover-scale: 1.10;      /* how much active slide zooms on hover */
       --accent: #7ad7ff;
       --muted: rgba(255,255,255,0.12);
       --btn-w: 52px;
@@ -46,8 +47,11 @@
     .slide-inner { width:100%; height:100%; position:relative; overflow:hidden; }
     .slide-inner img{
       width:102%; height:102%; object-fit:cover; display:block;
-      transform-origin:center center; transition: transform .55s cubic-bezier(.2,.95,.2,1), filter .3s ease;
+      transform-origin:center center;
+      /* smoother transition for hover + parallax */
+      transition: transform .45s cubic-bezier(.2,.95,.2,1), filter .3s ease;
       -webkit-user-drag:none; pointer-events:none;
+      will-change: transform;
     }
 
     /* overlay + vignette for cinematic look */
@@ -58,6 +62,23 @@
     .splide__slide.is-active { z-index:30; transform: scale(1.02); box-shadow:0 30px 90px rgba(0,0,0,0.75); }
     .splide__slide:not(.is-active) { z-index:10; }
     .splide__slide:not(.is-active) .slide-inner img { transform: scale(var(--neighbor-scale)); filter:brightness(.9) saturate(.96); }
+
+    /* -----------------------
+       HOVER EFFECT (what you asked)
+       - When the user rests the cursor on the active (center) slide,
+         the image will zoom to --hover-scale to "reveal" the full image.
+       - We use !important so hover overrides inline transforms applied by JS parallax.
+       ----------------------- */
+    .splide__slide.is-active:hover { cursor: zoom-in; } /* visual hint */
+    .splide__slide.is-active:hover .slide-inner img {
+      transform: scale(var(--hover-scale)) !important;
+      filter: brightness(1) saturate(1) !important;
+    }
+    /* keep neighbors unchanged on hover (avoid accidental zoom) */
+    .splide__slide:not(.is-active):hover .slide-inner img {
+      transform: scale(var(--neighbor-scale)) !important;
+      filter: brightness(.9) saturate(.96) !important;
+    }
 
     /* caption bottom-left */
     .caption { position:absolute; left:14px; bottom:14px; color:#e9fbff; pointer-events:none; text-shadow: 0 6px 18px rgba(0,0,0,0.55); }
@@ -88,7 +109,7 @@
   <div class="wrap">
     <div class="panel" role="main">
       <h1>Fancy Peek Carousel</h1>
-      <p class="lead">One image centered — neighbors peek and are smaller. Buttons below, no dots.</p>
+      <p class="lead">Hover the centered photo to see it fully (zoom). Neighbors remain smaller.</p>
 
       <!-- Splide structure -->
       <div id="splide" class="splide" aria-label="Fancy peek carousel">
@@ -169,6 +190,8 @@
           const prog = s.slide.progress || 0;
           const translate = prog * -16;
           const scale = 1 - Math.min(0.16, Math.abs(prog) * 0.12);
+          // only set inline transform for parallax when not hovering the active slide
+          // (we can't detect hover here reliably, so CSS hover uses !important to override)
           el.style.transform = `translateX(${translate}px) scale(${scale})`;
         });
       });
