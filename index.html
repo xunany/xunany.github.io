@@ -1,209 +1,280 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fancy Peek Carousel — Splide (Hover to see full image)</title>
+  <title>Elegant Peek Carousel — Example</title>
 
-  <!-- Splide CSS (CDN) -->
-  <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" rel="stylesheet">
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
 
   <style>
     :root{
       --bg:#071327;
-      --card-width: 80%;        /* center photo width */
-      --neighbor-scale: 0.86;   /* how much smaller neighbors look */
-      --hover-scale: 1.10;      /* how much active slide zooms on hover */
-      --accent: #7ad7ff;
+      --card-w: 84%;           /* central card width relative to viewport area */
+      --neighbor-scale: 0.88;  /* how small neighbors appear */
+      --accent: #6fe6ff;
       --muted: rgba(255,255,255,0.12);
-      --btn-w: 52px;
+      --btn-size: 52px;
+      --under-btn-w: 220px;
+      --glass: rgba(255,255,255,0.04);
     }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101c 0%, #071327 70%);color:#eef9ff;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101c 0%, #071327 60%);color:#eef9ff;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
     .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:36px}
-
-    .panel{width:clamp(360px,92vw,1100px);text-align:center}
-    h1{margin:0 0 6px;font-size:20px}
+    .card{width:clamp(360px,92vw,1100px);margin:0 auto;text-align:center}
+    h1{margin:0 0 6px;font-weight:600;font-size:20px;color:#f0fbff}
     p.lead{margin:0 0 18px;color:var(--muted);font-size:13px}
 
-    /* Splide container */
-    .splide{ width:100%; height: clamp(320px, 52vh, 640px); margin:0 auto; overflow:visible; }
-    .splide__track{ height:100% }
-    .splide__list{ align-items:center } /* vertical centering */
+    /* Swiper container */
+    .swiper-container {
+      width:100%;
+      height: clamp(340px, 52vh, 640px);
+      position:relative;
+      overflow:visible;
+      margin-bottom:14px;
+      touch-action: pan-y;
+    }
 
-    /* each slide styled as card */
-    .splide__slide{
-      width: var(--card-width);  /* center slide width */
+    /* wrapper aligns slides vertically center */
+    .swiper-wrapper { align-items:center; }
+
+    /* slide card */
+    .swiper-slide{
+      width:var(--card-w);
       height:100%;
       border-radius:14px;
       overflow:hidden;
-      box-shadow: 0 24px 60px rgba(2,6,12,0.6);
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      display:flex; align-items:center; justify-content:center;
-      transition: transform .5s cubic-bezier(.2,.95,.2,1), box-shadow .45s ease;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008));
+      box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+      transition: transform .45s cubic-bezier(.2,.95,.2,1), box-shadow .45s ease;
+    }
+
+    /* image styling & parallax layer */
+    .img-inner {
+      width:100%;
+      height:100%;
+      overflow:hidden;
       position:relative;
     }
-
-    .slide-inner { width:100%; height:100%; position:relative; overflow:hidden; }
-    .slide-inner img{
-      width:102%; height:102%; object-fit:cover; display:block;
+    .img-inner img {
+      width:102%;
+      height:102%;
+      object-fit:cover;
+      display:block;
       transform-origin:center center;
-      /* smoother transition for hover + parallax */
-      transition: transform .45s cubic-bezier(.2,.95,.2,1), filter .3s ease;
-      -webkit-user-drag:none; pointer-events:none;
-      will-change: transform;
+      transition: transform .6s cubic-bezier(.2,.95,.2,1), filter .35s ease;
+      pointer-events:none;
+      -webkit-user-drag:none;
     }
 
-    /* overlay + vignette for cinematic look */
-    .overlay { position:absolute; inset:0; pointer-events:none; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%); }
-    .vignette { position:absolute; inset:0; pointer-events:none; background: radial-gradient(900px 400px at 50% 30%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 35%, rgba(0,0,0,0.5) 100%); }
-
-    /* make active slide visually on top and slightly larger */
-    .splide__slide.is-active { z-index:30; transform: scale(1.02); box-shadow:0 30px 90px rgba(0,0,0,0.75); }
-    .splide__slide:not(.is-active) { z-index:10; }
-    .splide__slide:not(.is-active) .slide-inner img { transform: scale(var(--neighbor-scale)); filter:brightness(.9) saturate(.96); }
-
-    /* -----------------------
-       HOVER EFFECT (what you asked)
-       - When the user rests the cursor on the active (center) slide,
-         the image will zoom to --hover-scale to "reveal" the full image.
-       - We use !important so hover overrides inline transforms applied by JS parallax.
-       ----------------------- */
-    .splide__slide.is-active:hover { cursor: zoom-in; } /* visual hint */
-    .splide__slide.is-active:hover .slide-inner img {
-      transform: scale(var(--hover-scale)) !important;
-      filter: brightness(1) saturate(1) !important;
+    /* a subtle vignette and gradient overlay for cinematic look */
+    .slide-overlay {
+      position:absolute; inset:0; pointer-events:none;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(6,10,16,0.45) 70%);
     }
-    /* keep neighbors unchanged on hover (avoid accidental zoom) */
-    .splide__slide:not(.is-active):hover .slide-inner img {
-      transform: scale(var(--neighbor-scale)) !important;
-      filter: brightness(.9) saturate(.96) !important;
+    .slide-vignette {
+      position:absolute; inset:0; pointer-events:none;
+      background: radial-gradient(1200px 600px at 50% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 40%, rgba(0,0,0,0.45) 100%);
     }
 
-    /* caption bottom-left */
-    .caption { position:absolute; left:14px; bottom:14px; color:#e9fbff; pointer-events:none; text-shadow: 0 6px 18px rgba(0,0,0,0.55); }
-    .caption .title{ font-weight:700; font-size:15px }
-    .caption .sub{ font-size:13px; opacity:.9; color:#daf6ffcc }
-
-    /* buttons under the carousel */
-    .controls { display:flex; gap:12px; align-items:center; justify-content:center; margin-top:12px }
-    .btn {
-      width:var(--btn-w); height:var(--btn-w); border-radius:12px; display:grid; place-items:center;
-      background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.03); cursor:pointer; color:#fff;
-      box-shadow: 0 8px 26px rgba(0,0,0,0.45); font-size:20px; transition: transform .12s ease, background .12s ease;
+    /* center slide pops above neighbors */
+    .swiper-slide-active {
+      z-index: 20 !important;
+      transform: translateZ(0) scale(1.02);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.75);
     }
-    .btn:hover{ transform: translateY(-4px) scale(1.03); background: rgba(255,255,255,0.06) }
+    /* neighbors are slightly smaller and darker */
+    .swiper-slide:not(.swiper-slide-active) {
+      z-index: 10;
+    }
+    .swiper-slide:not(.swiper-slide-active) .img-inner img {
+      transform: scale(var(--neighbor-scale));
+      filter: brightness(.90) saturate(.96);
+    }
 
-    /* hide built-in pagination */
-    .splide__pagination { display:none !important; }
+    /* caption (bottom-left) */
+    .caption {
+      position:absolute;
+      left:14px;
+      bottom:14px;
+      color:#e9fbff;
+      text-align:left;
+      pointer-events:none;
+      text-shadow: 0 6px 18px rgba(0,0,0,0.55);
+    }
+    .caption .title { font-weight:700; font-size:15px; margin-bottom:4px }
+    .caption .sub { font-size:13px; opacity:.9; color:#daf6ffcc }
 
+    /* controls under the carousel (centered) */
+    .controls-under {
+      width:100%;
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      align-items:center;
+      margin-top:6px;
+    }
+    .icon-btn {
+      width:var(--btn-size); height:var(--btn-size);
+      border-radius:12px; display:grid; place-items:center;
+      background:var(--glass); border:1px solid rgba(255,255,255,0.04);
+      color:#fff; cursor:pointer; font-size:22px;
+      box-shadow: 0 10px 30px rgba(2,6,12,0.5);
+      transition: transform .12s ease, background .12s ease;
+    }
+    .icon-btn:hover { transform: translateY(-3px) scale(1.03); background: rgba(255,255,255,0.06) }
+
+    /* small label inside control container */
+    .controls-under .label { color:var(--muted); font-size:13px; margin-left:8px }
+
+    /* hide default pagination and nav if any */
+    .swiper-pagination, .swiper-button-prev, .swiper-button-next { display:none !important; }
+
+    /* responsiveness */
     @media (max-width:880px){
-      :root{ --card-width:88%; --neighbor-scale:0.9; --btn-w:46px }
+      :root{ --card-w: 88%; --neighbor-scale: 0.90; --btn-size:46px }
     }
     @media (max-width:520px){
-      :root{ --card-width:94%; --neighbor-scale:0.94 }
+      :root{ --card-w: 94%; --neighbor-scale: 0.94; }
+      .caption { left:10px; bottom:10px; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="panel" role="main">
-      <h1>Fancy Peek Carousel</h1>
-      <p class="lead">Hover the centered photo to see it fully (zoom). Neighbors remain smaller.</p>
+    <div class="card" role="main" aria-label="Elegant peek carousel example">
+      <h1>Elegant Peek Carousel</h1>
+      <p class="lead">Center image larger; previous/next peek at the sides. Buttons are below.</p>
 
-      <!-- Splide structure -->
-      <div id="splide" class="splide" aria-label="Fancy peek carousel">
-        <div class="splide__track">
-          <ul class="splide__list">
-            <li class="splide__slide">
-              <div class="slide-inner"><img data-splide-lazy="photos/XPX03427.jpg" alt="XPX03427"></div>
-              <div class="overlay"></div><div class="vignette"></div>
-              <div class="caption"><div class="title">XPX03427</div><div class="sub">Description or caption</div></div>
-            </li>
+      <!-- Swiper -->
+      <div class="swiper-container swiper" id="swiperElegant">
+        <div class="swiper-wrapper">
+          <!-- 3 example slides (your filenames) -->
+          <div class="swiper-slide">
+            <div class="img-inner"><img data-src="photos/XPX03427.jpg" alt="XPX03427"></div>
+            <div class="slide-overlay"></div>
+            <div class="slide-vignette"></div>
+            <div class="caption"><div class="title">XPX03427</div><div class="sub">Elegant example photo</div></div>
+          </div>
 
-            <li class="splide__slide">
-              <div class="slide-inner"><img data-splide-lazy="photos/XPX03250.jpg" alt="XPX03250"></div>
-              <div class="overlay"></div><div class="vignette"></div>
-              <div class="caption"><div class="title">XPX03250</div><div class="sub">Description or caption</div></div>
-            </li>
+          <div class="swiper-slide">
+            <div class="img-inner"><img data-src="photos/XPX03250.jpg" alt="XPX03250"></div>
+            <div class="slide-overlay"></div>
+            <div class="slide-vignette"></div>
+            <div class="caption"><div class="title">XPX03250</div><div class="sub">Gentle mood</div></div>
+          </div>
 
-            <li class="splide__slide">
-              <div class="slide-inner"><img data-splide-lazy="photos/XPX03269.jpg" alt="XPX03269"></div>
-              <div class="overlay"></div><div class="vignette"></div>
-              <div class="caption"><div class="title">XPX03269</div><div class="sub">Description or caption</div></div>
-            </li>
-          </ul>
+          <div class="swiper-slide">
+            <div class="img-inner"><img data-src="photos/XPX03269.jpg" alt="XPX03269"></div>
+            <div class="slide-overlay"></div>
+            <div class="slide-vignette"></div>
+            <div class="caption"><div class="title">XPX03269</div><div class="sub">Soft tones</div></div>
+          </div>
         </div>
       </div>
 
-      <!-- controls under -->
-      <div class="controls" role="toolbar" aria-label="Carousel controls">
-        <button id="prev" class="btn" aria-label="Previous">‹</button>
-        <button id="next" class="btn" aria-label="Next">›</button>
+      <!-- controls under (no dots) -->
+      <div class="controls-under" aria-hidden="false">
+        <button id="prevBtn" class="icon-btn" aria-label="Previous slide">‹</button>
+        <button id="nextBtn" class="icon-btn" aria-label="Next slide">›</button>
+        <div class="label">Use swipe or arrow keys too</div>
       </div>
     </div>
   </div>
 
-  <!-- Splide JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+  <!-- Swiper JS -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 
   <script>
-    // Initialize Splide with center slide and peek
-    const splide = new Splide('#splide', {
-      type: 'slide',
-      perPage: 1,
-      focus: 'center',       // center active slide
-      gap: '20px',
-      padding: { left: '10%', right: '10%' }, // make room so neighbors peek
-      autoplay: false,
-      arrows: false,         // we use our custom arrows below
-      pagination: false,     // hide the dots
-      lazyLoad: 'nearby',    // lazy-load current+neighbors
-      speed: 600,
-      dragAngleThreshold: 10,
-      flickPower: 600,
-      breakpoints: {
-        880: { padding: { left: '6%', right: '6%' } },
-        520: { padding: { left: '4%', right: '4%' } }
+    // Initialize Swiper elegantly and ensure external buttons work
+    const swiper = new Swiper('#swiperElegant', {
+      effect: 'coverflow',
+      centeredSlides: true,
+      slidesPerView: 'auto',
+      grabCursor: true,
+      loop: false,
+      speed: 520,
+      keyboard: { enabled: true, onlyInViewport: true },
+      coverflowEffect: {
+        rotate: 0,
+        stretch: -40,   // brings slides closer (overlap)
+        depth: 160,
+        modifier: 1.0,
+        slideShadows: false
+      },
+      on: {
+        init: function() {
+          // lazy-load initial and neighbors
+          loadSlideImage(this.activeIndex);
+          loadSlideImage(this.activeIndex - 1);
+          loadSlideImage(this.activeIndex + 1);
+
+          // wire up external buttons safely now that swiper exists
+          document.getElementById('prevBtn').addEventListener('click', () => this.slidePrev());
+          document.getElementById('nextBtn').addEventListener('click', () => this.slideNext());
+
+          // subtle parallax: move image slightly based on progress
+          this.slides.forEach((slideEl, idx) => {
+            slideEl.querySelector('.img-inner img').style.transition = 'transform .6s cubic-bezier(.2,.95,.2,1)';
+          });
+        },
+        slideChange: function() {
+          // load neighbors on slide change
+          loadSlideImage(this.activeIndex - 1);
+          loadSlideImage(this.activeIndex);
+          loadSlideImage(this.activeIndex + 1);
+        },
+        touchMove: function() {
+          // visual tweak during drag: small parallax
+          updateParallax(this);
+        },
+        setTranslate: function() {
+          updateParallax(this);
+        }
       }
     });
 
-    splide.mount();
+    // Helper: lazy-load slide image by index (wraps negative/overflow safely)
+    function loadSlideImage(i){
+      const slides = swiper.slides;
+      const idx = ((i % slides.length) + slides.length) % slides.length;
+      const img = slides[idx].querySelector('img');
+      if (img && !img.src) {
+        img.src = img.dataset.src;
+      }
+    }
 
-    // Hook our under-buttons (guaranteed to work after mount)
-    document.getElementById('prev').addEventListener('click', () => splide.go('<'));
-    document.getElementById('next').addEventListener('click', () => splide.go('>'));
+    // Parallax visual effect: slight image translate based on slide progress
+    function updateParallax(swpr){
+      const slides = swpr.slides;
+      for (let s = 0; s < slides.length; s++){
+        const slideEl = slides[s];
+        const progress = slideEl.progress; // -2..2 depending on position
+        const img = slideEl.querySelector('.img-inner img');
+        if (!img) continue;
+        // map progress to small translate & scale for parallax
+        const translateX = Math.max(-40, Math.min(40, progress * -18));
+        const scale = 1 - Math.min(0.12, Math.abs(progress) * 0.12);
+        img.style.transform = `translateX(${translateX}px) scale(${scale})`;
+      }
+    }
 
-    // Optional: add keyboard controls (left/right)
+    // keyboard left/right already enabled via config; add Escape to blur focus
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') splide.go('<');
-      if (e.key === 'ArrowRight') splide.go('>');
+      if (e.key === 'Escape') document.activeElement && document.activeElement.blur();
     });
 
-    // Small parallax effect while dragging
-    splide.on('move', () => {
-      requestAnimationFrame(() => {
-        const slides = splide.Components.Slides.get();
-        slides.forEach(s => {
-          const el = s.slide.querySelector('.slide-inner img');
-          if (!el) return;
-          const prog = s.slide.progress || 0;
-          const translate = prog * -16;
-          const scale = 1 - Math.min(0.16, Math.abs(prog) * 0.12);
-          // only set inline transform for parallax when not hovering the active slide
-          // (we can't detect hover here reliably, so CSS hover uses !important to override)
-          el.style.transform = `translateX(${translate}px) scale(${scale})`;
-        });
-      });
-    });
-
-    // Ensure neighbor scaling looks good on init
-    splide.on('mounted move', () => {
-      const slides = document.querySelectorAll('.splide__slide');
-      slides.forEach(sl => sl.classList.remove('is-active'));
-      const active = document.querySelector('.splide__slide.is-active') || document.querySelector('.splide__slide.is-visible');
-      if (active) active.classList.add('is-active');
-    });
+    // initial load: ensure first image is loaded
+    loadSlideImage(swiper.activeIndex);
   </script>
 </body>
 </html>
+
+
+
+
