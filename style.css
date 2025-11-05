@@ -8,7 +8,7 @@ body {
 
 .photo-box {
   width: 600px;
-  height: 200px;
+  height: 400px;
   overflow: hidden;
   border-radius: 10px;
 }
@@ -20,9 +20,8 @@ body {
   transition: all 0.4s ease;
 }
 
-/* When hovered, change to another image */
-.main-photo:hover {
-  content: url('photo2.jpg');
-  transform: scale(1.05); /* gentle zoom-in */
+img:hover {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
   cursor: pointer;
 }
