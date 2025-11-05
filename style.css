@@ -1,0 +1,28 @@
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #fafafa;
+}
+
+.photo-box {
+  width: 300px;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.main-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.4s ease;
+}
+
+/* When hovered, change to another image */
+.main-photo:hover {
+  content: url('photo2.jpg');
+  transform: scale(1.05); /* gentle zoom-in */
+  cursor: pointer;
+}
